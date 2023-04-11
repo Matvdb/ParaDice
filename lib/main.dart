@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:paradise/ecran/myhomepage.dart';
+import 'package:paradise/ecran/splashScreen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.green,
       ),
       debugShowCheckedModeBanner: false,
-      home: const MyHomePage(title: "Para'Dice"),
+      home: const SplashScreen(),
     );
   }
 }

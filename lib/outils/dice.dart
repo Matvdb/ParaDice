@@ -2,7 +2,7 @@ import 'dart:math';
 
 class Dice{
   int _nbFace = 0;
-  int _res = 0;
+  int ? _res;
 
   Dice(this._nbFace, this._res);
 

@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:paradise/outils/dice.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -15,25 +19,47 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
-  /* late final AnimationController _controller = AnimationController(
-    duration: const Duration(seconds: 2),
-    vsync: this,
-  )..repeat(reverse: false);
-  late final Animation<double> _animation = CurvedAnimation(
-    parent: _controller,
-    curve: Curves.elasticOut,
-  ); */
 
-  /* @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-    Duration(seconds: 3);
-  } */
+  late AnimationController _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
+
+  Container de = Container();
+  AssetImage assetImage = const AssetImage("assets/de.png");
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = new AnimationController(
+      vsync: this,
+      duration: new Duration(seconds: 2),
+    );
+    _controller.forward();
+    _controller.addListener(() {
+      setState(() {
+        if (_controller.status == AnimationStatus.completed) {
+          _controller.repeat(period: Duration(seconds: 2));
+          assetImage;
+        }
+      });
+    });
+  }
+
+  Widget afficheDe(){
+    de = Container(
+      height: MediaQuery.of(context).size.height * 0.2,
+      width: MediaQuery.of(context).size.width * 0.2,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: assetImage,
+        )
+      ),
+    );
+    return de;
+  }
 
   int _nbFace = 6;
   int ? _res;
   int _nbResult = 0;
+  int nbDe = 0;
   int nb1 = 0;
   int nb2 = 0;
   int nb3 = 0;
@@ -57,6 +83,27 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     });
   }
 
+  Widget afficheResultat(){
+    if(_res == null){
+      _res = 0;
+    }
+    return Text("$_res", 
+      style: TextStyle(
+        fontSize: 15.0,
+        fontWeight: FontWeight.bold,
+      ),);
+  }
+
+  Widget afficheNbDe(){
+    if(nbDe < 0){
+      nbDe = 0;
+    }
+    return Text("$nbDe",
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 20.0,
+      ),);
+  }
   void recupResult(){
     setState(() {
         if(_res != 0){
@@ -83,7 +130,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
   
-  Widget _buttons(int value){
+  Widget _buttons(String operateur, int value){
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.07,
       child: ElevatedButton(
@@ -94,10 +141,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               borderRadius: BorderRadius.circular(10.0)
           ),
         ),
-        onPressed: (){},
-        child: Text(
-          "$value",
-          style: TextStyle(
+        onPressed: (){
+          setState(() {
+            nbDe = nbDe + value;
+          });
+        },
+        child: Text("$operateur" + "$value",
+          style: const TextStyle(
             color: Colors.black,
           ),
         ),
@@ -121,49 +171,38 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Padding(padding: EdgeInsets.all(5)),
+            const Padding(padding: EdgeInsets.all(5)),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buttons(-10),
-                Padding(padding: EdgeInsets.all(5)),
-                _buttons(-1),
-                Padding(padding: EdgeInsets.all(5)),
-                _buttons(1),
-                Padding(padding: EdgeInsets.all(5)),
-                _buttons(1),
-                Padding(padding: EdgeInsets.all(5)),
-                _buttons(10),
-              ],
-            ),
-            Padding(padding: EdgeInsets.all(10)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Text(
-                  'Nombre de ',
-                  style: TextStyle(
-                    fontSize: 20.0,
-                  ),
-                ),
-                Text(
-                  '$_res',
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ]
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+                _buttons("", -10),
+                const Padding(padding: EdgeInsets.all(5)),
+                _buttons("", -1),
+                const Padding(padding: EdgeInsets.all(5)),
+                _buttons("", 1),
+                const Padding(padding: EdgeInsets.all(5)),
+                _buttons("+", 1),
+                const Padding(padding: EdgeInsets.all(5)),
+                _buttons("+", 10),
               ],
             ),
             const Padding(padding: EdgeInsets.all(10)),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
-              children: [
+              children:  [
+                const Text(
+                  'Nombre de dé : ',
+                  style: TextStyle(
+                    fontSize: 20.0,
+                  ),
+                ),
+                afficheNbDe(),
+              ]
+            ),
+            const Padding(padding: EdgeInsets.all(10)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: const [
                 Text(
                   "Les résultats",
                   style: TextStyle(
@@ -175,43 +214,74 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             ),
             const Padding(padding: EdgeInsets.all(5)),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'Résultat du lancement ',
+                  style: TextStyle(
+                    fontSize: 15.0,
+                  ),
+                ),
+                afficheResultat(),
+              ],
+            ),
+            const Padding(padding: EdgeInsets.all(5)),
+            Container(
+              height: MediaQuery.of(context).size.height * 0.2,
+              width: MediaQuery.of(context).size.width * 0.75,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _txtResultat("Nombre de 1 : " + "$nb1"),
-                Padding(padding: EdgeInsets.all(5)),
-                _txtResultat("Nombre de 4 : " + "$nb4"),
+                _txtResultat("Nombre de 1 : $nb1"),
+                const Padding(padding: EdgeInsets.all(5)),
+                _txtResultat("Nombre de 4 : $nb4"),
               ],
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _txtResultat("Nombre de 2 : " + "$nb2"),
-                Padding(padding: EdgeInsets.all(5)),
-                _txtResultat("Nombre de 5 : " + "$nb5"),
+                _txtResultat("Nombre de 2 : $nb2"),
+                const Padding(padding: EdgeInsets.all(5)),
+                _txtResultat("Nombre de 5 : $nb5"),
               ],
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _txtResultat("Nombre de 3 : " + "$nb3"),
-                Padding(padding: EdgeInsets.all(5)),
-                _txtResultat("Nombre de 6 : " + "$nb6"),
+                _txtResultat("Nombre de 3 : $nb3"),
+                const Padding(padding: EdgeInsets.all(5)),
+                _txtResultat("Nombre de 6 : $nb6"),
               ],
             ),
+                  ],
+                ),
+              ),
+            ),
+            
             const Padding(padding: EdgeInsets.all(10)),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Résultat obtenu : " + "$_nbMoyenne"),
+                Text("Moyenne des lancement : $_nbMoyenne"),
               ],
             ),
-            /* RotationTransition(
-              turns: _animation,
-              child: const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: FlutterLogo(size: 150.0),
-              ),
-            ), */
+            const Padding(padding: EdgeInsets.all(30)),
+            AnimatedBuilder(
+              animation: _controller,
+              builder: (_, child) {
+                return Transform.rotate(
+                  angle: _controller.value * 50 * math.pi,
+                  child: de,
+                );
+              },
+              child: de,
+            ),
+            
           ],
         ),
       ),
@@ -221,6 +291,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             lancer();
             recupResult();
             moyenne();
+            afficheDe();
           });
         },
         tooltip: 'Lancer dé',
