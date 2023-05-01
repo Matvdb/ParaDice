@@ -29,7 +29,6 @@ class _LancerDesPersonnaliseState extends State<LancerDesPersonnalise> {
             ),
             child: const Image(image: AssetImage("assets/paradice_logo.png")),
           ),
-          Text("est"),
         ],
       ),
     );
