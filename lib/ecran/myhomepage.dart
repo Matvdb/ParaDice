@@ -1,29 +1,26 @@
-import 'dart:async';
-import 'dart:io';
-import 'dart:math';
-import 'dart:math' as math;
-import 'dart:ui';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:paradise/outils/dice.dart';
+import 'package:paradise/outils/dicepool.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
   final String title;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
+class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin{
 
+  // Initialise un _controller qui executera une animation
   late AnimationController _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
 
+  // Container ainsi que l'image du dé qui sera 'animé'
   Container de = Container();
   AssetImage assetImage = const AssetImage("assets/de.png");
+  
+  // Récupération des fonctions etc .. présente dans la classe DicePool
+  DicePool _dicePool = new DicePool();
+  Column _column = Column();
 
   @override
   void initState() {
@@ -37,12 +34,18 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       setState(() {
         if (_controller.status == AnimationStatus.completed) {
           _controller.repeat(period: Duration(seconds: 2));
-          assetImage;
         }
       });
     });
   }
 
+  @override
+  void dispose(){
+    _controller.dispose(); // Met fin au _controller afin de ne pas faire planter le programme.
+    super.dispose();
+  }
+
+  // Widget affichant le dé, éxécuté lors du lancer
   Widget afficheDe(){
     de = Container(
       height: MediaQuery.of(context).size.height * 0.2,
@@ -56,245 +59,259 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     return de;
   }
 
-  int _nbFace = 6;
-  int ? _res;
-  int _nbResult = 0;
-  int nbDe = 0;
-  int nb1 = 0;
-  int nb2 = 0;
-  int nb3 = 0;
-  int nb4 = 0;
-  int nb5 = 0;
-  int nb6 = 0;
-  double _nbMoyenne = 0;
-
-  int getRes(){
-    return _nbFace;
+  // Liste de Widgets (boutons) concernant le nombre de dés
+  // Leurs utilisations influeras sur le lancer du nombre de dés
+  List<Widget> listBtnDes() {
+    return [
+      ElevatedButton(
+        onPressed: () => setState(() => _dicePool.decrementNbDice(10)),
+        style: ButtonStyle(
+            backgroundColor:
+                MaterialStateColor.resolveWith((states) => Colors.white)),
+        child: const Text('-10', style: TextStyle(color: Colors.green)),
+      ),
+      ElevatedButton(
+        onPressed: () => setState(() => _dicePool.decrementNbDice(1)),
+        style: ButtonStyle(
+            backgroundColor:
+                MaterialStateColor.resolveWith((states) => Colors.white)),
+        child: const Text('-1', style: TextStyle(color: Colors.green)),
+      ),
+      ElevatedButton(
+        onPressed: () => setState(() => _dicePool.setNbDice(1)),
+        style: ButtonStyle(
+            backgroundColor:
+                MaterialStateColor.resolveWith((states) => Colors.white)),
+        child: const Text('1', style: TextStyle(color: Colors.green)),
+      ),
+      ElevatedButton(
+        onPressed: () => setState(() => _dicePool.incrementNbDice(1)),
+        style: ButtonStyle(
+            backgroundColor:
+                MaterialStateColor.resolveWith((states) => Colors.white)),
+        child: const Text('+1', style: TextStyle(color: Colors.green)),
+      ),
+      ElevatedButton(
+        onPressed: () => setState(() => _dicePool.incrementNbDice(10)),
+        style: ButtonStyle(
+            backgroundColor:
+                MaterialStateColor.resolveWith((states) => Colors.white)),
+        child: const Text('+10', style: TextStyle(color: Colors.green)),
+      )
+    ];
   }
 
-  void lancer(){
-    _res = Random().nextInt(_nbFace) + 1;
+  // Liste de Widgets (boutons) concernant le nombre de faces
+  // Leurs utilisations influeras sur le nombre de faces du dé
+  List<Widget> listBtnFace() {
+    return [
+      ElevatedButton(
+        onPressed: () => setState(() => _dicePool.decrementNbFace(10)),
+        style: ButtonStyle(
+            backgroundColor:
+                MaterialStateColor.resolveWith((states) => Colors.white)),
+        child: const Text('-10', style: TextStyle(color: Colors.green)),
+      ),
+      ElevatedButton(
+        onPressed: () => setState(() => _dicePool.decrementNbFace(1)),
+        style: ButtonStyle(
+            backgroundColor:
+                MaterialStateColor.resolveWith((states) => Colors.white)),
+        child: const Text('-1', style: TextStyle(color: Colors.green)),
+      ),
+      ElevatedButton(
+        onPressed: () => setState(() => _dicePool.setNbFace(1)),
+        style: ButtonStyle(
+            backgroundColor:
+                MaterialStateColor.resolveWith((states) => Colors.white)),
+        child: const Text('1', style: TextStyle(color: Colors.green)),
+      ),
+      ElevatedButton(
+        onPressed: () => setState(() => _dicePool.incrementNbFace(1)),
+        style: ButtonStyle(
+            backgroundColor:
+                MaterialStateColor.resolveWith((states) => Colors.white)),
+        child: const Text('+1', style: TextStyle(color: Colors.green)),
+      ),
+      ElevatedButton(
+        onPressed: () => setState(() => _dicePool.incrementNbFace(10)),
+        style: ButtonStyle(
+            backgroundColor:
+                MaterialStateColor.resolveWith((states) => Colors.white)),
+        child: const Text('+10', style: TextStyle(color: Colors.green)),
+      )
+    ];
   }
 
-  void moyenne(){
-    setState(() {
-      double myn = (nb1 + nb2 + nb3 + nb4 + nb5 + nb6) / _nbFace;
-      _nbMoyenne = myn;
-    });
-  }
-
-  Widget afficheResultat(){
-    if(_res == null){
-      _res = 0;
-    }
-    return Text("$_res", 
-      style: TextStyle(
-        fontSize: 15.0,
-        fontWeight: FontWeight.bold,
-      ),);
-  }
-
-  Widget afficheNbDe(){
-    if(nbDe < 0){
-      nbDe = 0;
-    }
-    return Text("$nbDe",
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 20.0,
-      ),);
-  }
-  void recupResult(){
-    setState(() {
-        if(_res != 0){
-          if(_res == 1){
-            nb1++;
-          }
-          if(_res == 2){
-            nb2++;
-          }
-          if(_res == 3){
-            nb3++;
-          }
-          if(_res == 4){
-            nb4++;
-          }
-          if(_res == 5){
-            nb5++;
-          }
-          if(_res == 6){
-            nb6++;
-          }
+  // Récupère le nombre de face selon le choix utilisateurs afin de les afficher
+  // -> si le nombre de la face est égal au résultat du lancer de dé, le compteur de la face du dé est incrémenter.
+  void result() {
+    List<Widget> list = List.empty(growable: true);
+    int nbFace = _dicePool.getListDice()[0].getNbFace();
+    for (int face = 1; face <= nbFace; face++) {
+      int count = 0;
+      for (int i = 0; i < _dicePool.getResult().length; i++) {
+        if (face == _dicePool.getResult()[i]) {
+          count++;
         }
       }
-    );
-  }
-  
-  Widget _buttons(String operateur, int value){
-    return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.07,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          alignment: Alignment.center,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0)
+      list.add( // Ajout des caractéristiques dans la liste de faces
+        RichText(
+          text: TextSpan(
+            text: 'Nombre de ${face}: ',
+            style: const TextStyle(color: Colors.black, fontSize: 18),
+            children: [
+              TextSpan(
+                text: count.toString(),
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18
+                ),
+              ),
+            ],
           ),
         ),
-        onPressed: (){
-          setState(() {
-            nbDe = nbDe + value;
-          });
-        },
-        child: Text("$operateur" + "$value",
-          style: const TextStyle(
-            color: Colors.black,
-          ),
+      );
+    }
+    // division de la liste de face par deux pour l'afficher en deux compartiments
+    int divlist = (list.length / 2).floor();
+
+    // génération de la première et deuxième liste de faces
+    List<Widget> firstList = list.sublist(0, divlist);
+    List<Widget> secondList = list.sublist(divlist, list.length);
+
+    setState(() {
+      _column = Column(children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Column(
+              children: firstList,
+            ),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 5)),
+            Column(
+              children: secondList,
+            ),
+          ],
         ),
-      ),
-    );
+        const Padding(padding: EdgeInsets.all(8)),
+        Column(
+          children: [
+            RichText(
+              text: TextSpan(
+                text: 'Moyenne obtenue: ',
+                style: const TextStyle(color: Colors.black, fontSize: 18),
+                children: [
+                  TextSpan(
+                    text: _dicePool.calculMoyenne().toString(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 18
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ]);
+    });
   }
-
-  Widget _txtResultat(String txt){
-    return Text(txt);
-  }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
       ),
-      body: Center(
+      body: SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            const Padding(padding: EdgeInsets.all(5)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buttons("", -10),
-                const Padding(padding: EdgeInsets.all(5)),
-                _buttons("", -1),
-                const Padding(padding: EdgeInsets.all(5)),
-                _buttons("", 1),
-                const Padding(padding: EdgeInsets.all(5)),
-                _buttons("+", 1),
-                const Padding(padding: EdgeInsets.all(5)),
-                _buttons("+", 10),
-              ],
+            Container(
+              height: MediaQuery.of(context).size.height * 0.25,
+              width: MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor
+              ),
+              child: const Image(image: AssetImage("assets/paradice_logo.png")),
             ),
-            const Padding(padding: EdgeInsets.all(10)),
+            const Padding(padding: EdgeInsets.all(8)),
             Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children:  [
-                const Text(
-                  'Nombre de dé : ',
-                  style: TextStyle(
-                    fontSize: 20.0,
-                  ),
-                ),
-                afficheNbDe(),
-              ]
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: listBtnDes(),
             ),
-            const Padding(padding: EdgeInsets.all(10)),
+            const Padding(padding: EdgeInsets.all(8)),
+            RichText(
+              text: TextSpan(
+                text: 'Nombre de dé: ',
+                style: const TextStyle(color: Colors.black, fontSize: 18),
+                children: [
+                  TextSpan(
+                      text: _dicePool.getNbDice().toString(),
+                      style: const TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18)),
+                ],
+              ),
+            ),
+            const Padding(padding: EdgeInsets.all(8)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: listBtnFace(),
+            ),
+            const Padding(padding: EdgeInsets.all(8)),
+            RichText(
+              text: TextSpan(
+                text: 'Nombre de face: ',
+                style: const TextStyle(color: Colors.black, fontSize: 18),
+                children: [
+                  TextSpan(
+                      text: _dicePool.getNbFace().toString(),
+                      style: const TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18)),
+                ],
+              ),
+            ),
+            const Padding(padding: EdgeInsets.all(8)),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: const [
-                Text(
-                  "Les résultats",
+                Text("Les résultats :",
                   style: TextStyle(
-                    fontSize: 20.0,
+                    fontSize: 18.0,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-            const Padding(padding: EdgeInsets.all(5)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Résultat du lancement ',
-                  style: TextStyle(
-                    fontSize: 15.0,
-                  ),
-                ),
-                afficheResultat(),
-              ],
-            ),
-            const Padding(padding: EdgeInsets.all(5)),
-            Container(
-              height: MediaQuery.of(context).size.height * 0.2,
-              width: MediaQuery.of(context).size.width * 0.75,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _txtResultat("Nombre de 1 : $nb1"),
-                const Padding(padding: EdgeInsets.all(5)),
-                _txtResultat("Nombre de 4 : $nb4"),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _txtResultat("Nombre de 2 : $nb2"),
-                const Padding(padding: EdgeInsets.all(5)),
-                _txtResultat("Nombre de 5 : $nb5"),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _txtResultat("Nombre de 3 : $nb3"),
-                const Padding(padding: EdgeInsets.all(5)),
-                _txtResultat("Nombre de 6 : $nb6"),
-              ],
-            ),
-                  ],
+            const Padding(padding: EdgeInsets.all(8)),
+            _column,
+            ...List.from(_dicePool.getListMoyennes().reversed).map(
+              (moyenne) => ListTile(
+                title: Text(
+                  'Moyenne de $moyenne',
+                  style: const TextStyle(
+                      color: Colors.black,),
                 ),
               ),
             ),
-            
-            const Padding(padding: EdgeInsets.all(10)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Moyenne des lancement : $_nbMoyenne"),
-              ],
-            ),
-            const Padding(padding: EdgeInsets.all(30)),
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (_, child) {
-                return Transform.rotate(
-                  angle: _controller.value * 50 * math.pi,
-                  child: de,
-                );
-              },
-              child: de,
-            ),
-            
+            de,
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          setState(() {
-            lancer();
-            recupResult();
-            moyenne();
-            afficheDe();
-          });
+          _dicePool.lancerPool();
+          result();
+          afficheDe();
         },
         tooltip: 'Lancer dé',
+        backgroundColor: Theme.of(context).primaryColor,
         child: const Icon(Icons.casino),
       ),
     );

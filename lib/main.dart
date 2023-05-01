@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:paradise/ecran/lancerPersonnalise.dart';
 import 'package:paradise/ecran/myhomepage.dart';
 import 'package:paradise/ecran/splashScreen.dart';
 
@@ -13,12 +14,19 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: "Para'Dice",
       theme: ThemeData(
         primaryColor: Colors.green,
+        useMaterial3: false,
       ),
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),
+      routes: <String, WidgetBuilder>{
+          '/lanceur': (BuildContext context) =>
+              const MyHomePage(title: "Para'Dice",),
+          '/personnalise': (BuildContext context) =>
+            const LancerDesPersonnalise(title: "Para'Dice",),
+      }
     );
   }
 }
